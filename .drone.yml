@@ -1,0 +1,26 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: Compile und Jar-Erstellung
+  image: maven:3-jdk-11
+  commands:
+  - mvn -Dmaven.test.skip=true assembly:assembly
+- name: Unit Tests
+  image: maven:3-jdk-11
+  commands:
+  - mvn test
+- name: Statische Code-Analyse
+  image: rawdee/pmd
+  commands:
+  - pmd -d src/main/java -f text -R pmd_ruleset.xml -language java
+- name: Veröffentlichen auf Docker Hub
+  image: plugins/docker
+  settings:
+    repo: cmon1996/calculator
+    username:
+      from_secret: dockerhub-uname
+    password:
+      from_secret: dockerhub-token
